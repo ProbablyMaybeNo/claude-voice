@@ -136,14 +136,16 @@ def _pipeline_thread() -> None:
         _set_status("Processing")
         try:
             speaker.stop()
+            recorder.play_greeting()
 
             # Try recording up to 2 times before giving up
             text = None
             for attempt in range(2):
                 wav_path = recorder.record_until_silence()
+
                 if wav_path is None:
                     if attempt == 0:
-                        speaker.speak("I didn't catch that — go ahead.")
+                        speaker.speak("Go ahead.")
                         continue
                     else:
                         speaker.speak("Nothing heard. Say Hey Claude to try again.")

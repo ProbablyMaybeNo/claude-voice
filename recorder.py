@@ -20,18 +20,23 @@ def _rms(frame: list) -> float:
     return math.sqrt(sum(s * s for s in frame) / len(frame))
 
 
-def record_until_silence() -> str | None:
-    """
-    Play chime + prompt, record until silence, return path to wav or None.
-    The wake word recorder must already be paused before calling this.
-    """
+def play_greeting() -> None:
+    """Play chime + prompt. Call this once before the first record attempt."""
     if config.CHIME_PATH.exists():
         try:
             speaker.play_file(str(config.CHIME_PATH))
         except Exception as e:
             log.warning("Chime playback failed: %s", e)
-
     speaker.speak("What do you need?")
+
+
+def record_until_silence() -> str | None:
+    """
+    Record from mic until silence, return path to wav or None.
+    Call play_greeting() before the first attempt.
+    A short settle delay is applied so mic doesn't catch TTS reverb.
+    """
+    time.sleep(0.15)  # Let room echo from TTS settle
 
     rec = pvrecorder.PvRecorder(
         frame_length=512,
