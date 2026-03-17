@@ -137,17 +137,25 @@ def _pipeline_thread() -> None:
         try:
             speaker.stop()
 
-            wav_path = recorder.record_until_silence()
-            if wav_path is None:
-                log.info("No audio captured.")
-                speaker.speak("I didn't hear anything. Try again.")
-                _set_status("Listening")
-                wake_word.resume()
-                continue
+            # Try recording up to 2 times before giving up
+            text = None
+            for attempt in range(2):
+                wav_path = recorder.record_until_silence()
+                if wav_path is None:
+                    if attempt == 0:
+                        speaker.speak("I didn't catch that — go ahead.")
+                        continue
+                    else:
+                        speaker.speak("Nothing heard. Say Hey Claude to try again.")
+                        break
 
-            text = transcriber.transcribe(wav_path)
+                text = transcriber.transcribe(wav_path)
+                if text:
+                    break
+                if attempt == 0:
+                    speaker.speak("Say that again.")
+
             if not text:
-                speaker.speak("I didn't catch that. Could you repeat?")
                 _set_status("Listening")
                 wake_word.resume()
                 continue
